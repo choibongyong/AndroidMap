@@ -6,26 +6,23 @@ import androidx.fragment.app.FragmentManager;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.Spinner;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.naver.maps.geometry.LatLng;
 import com.naver.maps.map.MapFragment;
 import com.naver.maps.map.NaverMap;
 import com.naver.maps.map.OnMapReadyCallback;
 
-import java.util.ArrayList;
-
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback{
 
     NaverMap myMap;
+    int count_Basic =1, count_Hybrid =1, count_Navi =1;
+    int n =0;
 //    ArrayList<String> arrayList;
 //    ArrayAdapter<String> arrayAdapter;
 //    Spinner spinner = (Spinner)findViewById(R.id.spinner);
-
 
     @Override
     public void onCreate (Bundle savedInstanceState){
@@ -55,27 +52,63 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         this.myMap = naverMap;
 
-        Button button_Basic = (Button)findViewById(R.id.button);
+        final Button button_Basic = (Button)findViewById(R.id.button);
+        final Button button_Hybrid = (Button)findViewById(R.id.button2);
+        final Button button_Terrain = (Button)findViewById(R.id.button3);
+        final ToggleButton toggleButton = (ToggleButton)findViewById(R.id.toggleButton);
+
+        toggleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(toggleButton.isChecked()){
+                    naverMap.setLayerGroupEnabled(NaverMap.LAYER_GROUP_BUILDING, false);
+                    naverMap.setLayerGroupEnabled(NaverMap.LAYER_GROUP_CADASTRAL, true);
+                }else{
+                    naverMap.setLayerGroupEnabled(NaverMap.LAYER_GROUP_CADASTRAL, false);
+                    naverMap.setLayerGroupEnabled(NaverMap.LAYER_GROUP_BUILDING, true);
+                }
+            }
+        });
+
         button_Basic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 naverMap.setMapType(NaverMap.MapType.Basic);
+                if(count_Basic++ % 2 == 0){
+                    button_Hybrid.setVisibility(view.GONE);
+                    button_Terrain.setVisibility(view.GONE);
+                }else{
+                    button_Hybrid.setVisibility(view.VISIBLE);
+                    button_Terrain.setVisibility(view.VISIBLE);
+                }
             }
         });
-
-        Button button_Hybrid = (Button)findViewById(R.id.button2);
         button_Hybrid.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 naverMap.setMapType(NaverMap.MapType.Hybrid);
+
+                if(count_Hybrid++ % 2 == 0){
+                    button_Basic.setVisibility(view.VISIBLE);
+                    button_Terrain.setVisibility(view.VISIBLE);
+                }else{
+                    button_Basic.setVisibility(view.GONE);
+                    button_Terrain.setVisibility(view.GONE);
+                }
             }
         });
-
-        Button button_Navi = (Button)findViewById(R.id.button3);
-        button_Navi.setOnClickListener(new View.OnClickListener() {
+        button_Terrain.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                naverMap.setMapType(NaverMap.MapType.Navi);
+                naverMap.setMapType(NaverMap.MapType.Terrain);
+
+                if(count_Navi++ % 2 == 0){
+                    button_Basic.setVisibility(view.VISIBLE);
+                    button_Hybrid.setVisibility(view.VISIBLE);
+                }else{
+                    button_Basic.setVisibility(view.GONE);
+                    button_Hybrid.setVisibility(view.GONE);
+                }
             }
         });
 

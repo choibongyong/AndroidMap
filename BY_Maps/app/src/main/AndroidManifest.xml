@@ -14,7 +14,9 @@
             android:name="com.naver.maps.map.CLIENT_ID"
             android:value="gphje98lwn" />
 
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
