@@ -11,9 +11,15 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.naver.maps.geometry.LatLng;
+import com.naver.maps.map.CameraPosition;
+import com.naver.maps.map.CameraUpdate;
 import com.naver.maps.map.MapFragment;
 import com.naver.maps.map.NaverMap;
 import com.naver.maps.map.OnMapReadyCallback;
+import com.naver.maps.map.overlay.InfoWindow;
+import com.naver.maps.map.overlay.LocationOverlay;
+import com.naver.maps.map.overlay.Marker;
+import com.naver.maps.map.overlay.Overlay;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback{
 
@@ -112,9 +118,62 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        LatLng coord = new LatLng(37, 127);
-        Toast.makeText(getApplicationContext(), "위도: " + coord.latitude + "경도: " + coord.longitude,Toast.LENGTH_SHORT).show();
-        //coord.distanceTo(new LatLng(15,200));
+
+//        LatLng coord = new LatLng(200, 200);
+//        Toast.makeText(getApplicationContext(), "위도: " + coord.latitude + "경도: " + coord.longitude,Toast.LENGTH_SHORT).show();
+
+        CameraUpdate cameraUpdate = CameraUpdate.scrollTo(new LatLng(35.945379, 126.682170));
+        naverMap.moveCamera(cameraUpdate);
+
+        Marker marker0 = new Marker();
+        marker0.setPosition(new LatLng(37.566672, 126.978412)); //서울시청
+        marker0.setMap(naverMap);
+
+        Marker marker1 = new Marker();
+        marker1.setPosition(new LatLng(35.945379, 126.682170)); //군산대학교 아카데미
+        marker1.setMap(naverMap);
+
+        Marker marker2 = new Marker();
+        marker2.setPosition(new LatLng(36.282929, 126.917359)); //집
+        marker2.setMap(naverMap);
+
+        marker0.setTag("서울시청");
+        marker1.setTag("군산대학교");
+        marker2.setTag("집");
+
+        InfoWindow infoWindow = new InfoWindow();
+        infoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(getApplicationContext()) {
+            @NonNull
+            @Override
+            public CharSequence getText(@NonNull InfoWindow infoWindow) {
+                return (CharSequence)infoWindow.getMarker().getTag();
+            }
+        });
+
+        Overlay.OnClickListener listener = overlay -> {
+            Marker marker = (Marker)overlay;
+
+            if (marker.getInfoWindow() == null) {
+                // 현재 마커에 정보 창이 열려있지 않을 경우 엶
+                infoWindow.open(marker);
+            } else {
+                // 이미 현재 마커에 정보 창이 열려있을 경우 닫음
+                infoWindow.close();
+            }
+            return true;
+        };
+
+        marker0.setOnClickListener(listener);
+        marker1.setOnClickListener(listener);
+        marker2.setOnClickListener(listener);
+
+
+        //위치오버레이
+//        LocationOverlay locationOverlay = naverMap.getLocationOverlay();
+//        locationOverlay.setVisible(true);
+//        locationOverlay.setPosition(new LatLng(35.945379, 126.682170));
+
+
 
     }
 }
