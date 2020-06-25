@@ -4,6 +4,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 
+import android.graphics.PointF;
+import android.location.Address;
+import android.location.Geocoder;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -21,14 +24,16 @@ import com.naver.maps.map.overlay.LocationOverlay;
 import com.naver.maps.map.overlay.Marker;
 import com.naver.maps.map.overlay.Overlay;
 
+import java.net.URLEncoder;
+import java.util.List;
+import java.util.Locale;
+
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback{
 
     NaverMap myMap;
+
     int count_Basic =1, count_Hybrid =1, count_Navi =1;
     int n =0;
-//    ArrayList<String> arrayList;
-//    ArrayAdapter<String> arrayAdapter;
-//    Spinner spinner = (Spinner)findViewById(R.id.spinner);
 
     @Override
     public void onCreate (Bundle savedInstanceState){
@@ -38,13 +43,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         FragmentManager fm = getSupportFragmentManager();
         MapFragment mapFragment = (MapFragment) fm.findFragmentById(R.id.map_fragment);
 
-        //arrayList = new ArrayList<>();
-        //arrayList.add("하이브리드"); arrayList.add("네비"); arrayList.add("일반");
-
-        // arrayAdapter = new ArrayAdapter<>(getApplicationContext(),android.R.layout.simple_spinner_dropdown_item,arrayList);
-
-        //spinner.setAdapter(arrayAdapter);
-        //spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
         if (mapFragment == null) {
             mapFragment = MapFragment.newInstance();
             fm.beginTransaction().add(R.id.map_fragment, mapFragment).commit();
@@ -53,16 +51,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
+
+
     @Override
     public void onMapReady(@NonNull final NaverMap naverMap) {
 
+        String client_id = "b2swhahkzz";
+        String client_secret="p4QGLMdzuXMdbK8BBCgIZHVo7MKKtc6mK5k6ScaI";
+        //String addr = URLEncoder.encode("주소입력","UTF-8");
+        String ur = "https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc?request=coordsToaddr&coords=129.1133567,35.2982640&sourcecrs=epsg:4326&output=json&orders=addr,admcode";
+
         this.myMap = naverMap;
+        Geocoder geocoder = new Geocoder(this, Locale.ENGLISH);
+        List<Address> addresses;
+
+        //addresses = geocoder.getFromLocation();
 
         final Button button_Basic = (Button)findViewById(R.id.button);
         final Button button_Hybrid = (Button)findViewById(R.id.button2);
         final Button button_Terrain = (Button)findViewById(R.id.button3);
         final ToggleButton toggleButton = (ToggleButton)findViewById(R.id.toggleButton);
-
         toggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -75,7 +83,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
         });
-
         button_Basic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -118,9 +125,41 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
+        InfoWindow infoWindow = new InfoWindow();
+        infoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(getApplicationContext()) {
+            @NonNull
+            @Override
+            public CharSequence getText(@NonNull InfoWindow infoWindow) {
+                return (CharSequence)infoWindow.getMarker().getTag();
+            }
+        }); // 마커에 정보띄우기
+        Overlay.OnClickListener listener = overlay -> {
+            Marker marker = (Marker)overlay;
 
-//        LatLng coord = new LatLng(200, 200);
-//        Toast.makeText(getApplicationContext(), "위도: " + coord.latitude + "경도: " + coord.longitude,Toast.LENGTH_SHORT).show();
+            if (marker.getInfoWindow() == null) {
+                // 현재 마커에 정보 창이 열려있지 않을 경우 엶
+                infoWindow.open(marker);
+            } else {
+                // 이미 현재 마커에 정보 창이 열려있을 경우 닫음
+                infoWindow.close();
+            }
+            return true;
+        }; //마커 on/off
+
+        naverMap.setOnMapClickListener(new NaverMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(@NonNull PointF pointF, @NonNull LatLng latLng) {
+
+                Marker mark = new Marker();
+                mark.setPosition(latLng);
+                mark.setMap(naverMap);
+
+                //mark.setTag(latLng);
+                mark.setTag("위도: " + latLng.latitude + "경도: " + latLng.longitude);
+                mark.setOnClickListener(listener);
+            }
+        });
+
 
         CameraUpdate cameraUpdate = CameraUpdate.scrollTo(new LatLng(35.945379, 126.682170));
         naverMap.moveCamera(cameraUpdate);
@@ -141,39 +180,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         marker1.setTag("군산대학교");
         marker2.setTag("집");
 
-        InfoWindow infoWindow = new InfoWindow();
-        infoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(getApplicationContext()) {
-            @NonNull
-            @Override
-            public CharSequence getText(@NonNull InfoWindow infoWindow) {
-                return (CharSequence)infoWindow.getMarker().getTag();
-            }
-        });
-
-        Overlay.OnClickListener listener = overlay -> {
-            Marker marker = (Marker)overlay;
-
-            if (marker.getInfoWindow() == null) {
-                // 현재 마커에 정보 창이 열려있지 않을 경우 엶
-                infoWindow.open(marker);
-            } else {
-                // 이미 현재 마커에 정보 창이 열려있을 경우 닫음
-                infoWindow.close();
-            }
-            return true;
-        };
-
         marker0.setOnClickListener(listener);
         marker1.setOnClickListener(listener);
         marker2.setOnClickListener(listener);
-
-
-        //위치오버레이
-//        LocationOverlay locationOverlay = naverMap.getLocationOverlay();
-//        locationOverlay.setVisible(true);
-//        locationOverlay.setPosition(new LatLng(35.945379, 126.682170));
-
-
 
     }
 }
