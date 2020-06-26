@@ -7,9 +7,12 @@ import androidx.fragment.app.FragmentManager;
 import android.graphics.PointF;
 import android.location.Address;
 import android.location.Geocoder;
+import android.net.UrlQuerySanitizer;
 import android.os.Bundle;
+import android.os.Message;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -24,9 +27,19 @@ import com.naver.maps.map.overlay.LocationOverlay;
 import com.naver.maps.map.overlay.Marker;
 import com.naver.maps.map.overlay.Overlay;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.List;
 import java.util.Locale;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback{
 
@@ -49,23 +62,42 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         mapFragment.getMapAsync((OnMapReadyCallback) this);
 
+//        TextView mTextView = (TextView)findViewById(R.id.textView);
+//        new Thread(new Runnable() {
+//            public void run() {
+//                try {
+//                    Thread.sleep(6000);
+//                    URL githubEndpoint = new URL("https://api.github.com/");
+//                    HttpsURLConnection myConnection = (HttpsURLConnection) githubEndpoint.openConnection();
+//                } catch(InterruptedException | IOException e ) {
+//
+//                }
+//
+//                mTextView.post(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                    }
+//                });
+//            }
+//        }).start();
+
     }
+
+
 
 
 
     @Override
     public void onMapReady(@NonNull final NaverMap naverMap) {
 
+        Geocoder geocoder = new Geocoder(this,Locale.getDefault());
+
         String client_id = "b2swhahkzz";
         String client_secret="p4QGLMdzuXMdbK8BBCgIZHVo7MKKtc6mK5k6ScaI";
         //String addr = URLEncoder.encode("주소입력","UTF-8");
-        String ur = "https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc?request=coordsToaddr&coords=129.1133567,35.2982640&sourcecrs=epsg:4326&output=json&orders=addr,admcode";
+        String url = "https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc?request=coordsToaddr&coords=129.1133567,35.2982640&sourcecrs=epsg:4326&output=json&orders=addr,admcode";
 
         this.myMap = naverMap;
-        Geocoder geocoder = new Geocoder(this, Locale.ENGLISH);
-        List<Address> addresses;
-
-        //addresses = geocoder.getFromLocation();
 
         final Button button_Basic = (Button)findViewById(R.id.button);
         final Button button_Hybrid = (Button)findViewById(R.id.button2);
