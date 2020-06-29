@@ -8,8 +8,10 @@ import android.graphics.PointF;
 import android.location.Address;
 import android.location.Geocoder;
 import android.net.UrlQuerySanitizer;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -61,41 +63,39 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             fm.beginTransaction().add(R.id.map_fragment, mapFragment).commit();
         }
         mapFragment.getMapAsync((OnMapReadyCallback) this);
-
-//        TextView mTextView = (TextView)findViewById(R.id.textView);
-//        new Thread(new Runnable() {
-//            public void run() {
-//                try {
-//                    Thread.sleep(6000);
-//                    URL githubEndpoint = new URL("https://api.github.com/");
-//                    HttpsURLConnection myConnection = (HttpsURLConnection) githubEndpoint.openConnection();
-//                } catch(InterruptedException | IOException e ) {
-//
-//                }
-//
-//                mTextView.post(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                    }
-//                });
-//            }
-//        }).start();
-
+        TextView mTextView = (TextView)findViewById(R.id.textView);
     }
 
 
+    public class MyAsyncTask extends AsyncTask<URL,Void, Void> {
+
+        @Override
+        protected Void doInBackground(URL... urls) {
 
 
+            String strCoord = String.valueOf(latLng.longitude) + "," + String.valueOf(latLng.latitude);
+            StringBuilder urlBuilder =
+                    new StringBuilder("https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc?request=coordsToaddr&coords=" +strCoord+ "&sourcecrs=epsg:4326&output=json&orders=addr");
+            try{
+                URL url = new URL(urlBuilder.toString());
+                HttpsURLConnection http = (HttpsURLConnection)url.openConnection();
+                http.setRequestProperty("Content-type", "application/json");
+                http.getRequestProperty("X-NCP-APIGW-API-KEY-ID:{b2swhahkzz}");
+                http.getRequestProperty("X-NCP-APIGW-API-KEY:{p4QGLMdzuXMdbK8BBCgIZHVo7MKKtc6mK5k6ScaI}");
+                http.setRequestMethod("GET");
+                http.connect();
+
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
 
     @Override
     public void onMapReady(@NonNull final NaverMap naverMap) {
-
-        Geocoder geocoder = new Geocoder(this,Locale.getDefault());
-
-        String client_id = "b2swhahkzz";
-        String client_secret="p4QGLMdzuXMdbK8BBCgIZHVo7MKKtc6mK5k6ScaI";
-        //String addr = URLEncoder.encode("주소입력","UTF-8");
-        String url = "https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc?request=coordsToaddr&coords=129.1133567,35.2982640&sourcecrs=epsg:4326&output=json&orders=addr,admcode";
 
         this.myMap = naverMap;
 
@@ -186,9 +186,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mark.setPosition(latLng);
                 mark.setMap(naverMap);
 
-                //mark.setTag(latLng);
                 mark.setTag("위도: " + latLng.latitude + "경도: " + latLng.longitude);
+
                 mark.setOnClickListener(listener);
+
             }
         });
 
