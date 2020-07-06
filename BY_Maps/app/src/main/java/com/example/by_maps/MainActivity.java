@@ -18,6 +18,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.naver.maps.geometry.LatLng;
 import com.naver.maps.map.CameraPosition;
 import com.naver.maps.map.CameraUpdate;
@@ -29,17 +32,24 @@ import com.naver.maps.map.overlay.LocationOverlay;
 import com.naver.maps.map.overlay.Marker;
 import com.naver.maps.map.overlay.Overlay;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.List;
 import java.util.Locale;
+import java.util.SimpleTimeZone;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -66,14 +76,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         TextView mTextView = (TextView)findViewById(R.id.textView);
     }
 
-
-    public class MyAsyncTask extends AsyncTask<URL,Void, Void> {
+    public class MyAsyncTask extends AsyncTask<LatLng,String, String>{
 
         @Override
-        protected Void doInBackground(URL... urls) {
+        protected String doInBackground(LatLng... latLngs) {
 
+            String strCoord = String.valueOf(latLngs[0].longitude) + "," + String.valueOf(latLngs[0].latitude);
+            Log.d("myLog", strCoord);
 
-            String strCoord = String.valueOf(latLng.longitude) + "," + String.valueOf(latLng.latitude);
+            StringBuilder sb = new StringBuilder();
             StringBuilder urlBuilder =
                     new StringBuilder("https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc?request=coordsToaddr&coords=" +strCoord+ "&sourcecrs=epsg:4326&output=json&orders=addr");
             try{
@@ -85,6 +96,50 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 http.setRequestMethod("GET");
                 http.connect();
 
+                InputStreamReader in = new InputStreamReader(http.getInputStream(),"utf-8");
+                BufferedReader rd;
+//                Log.d("getResponseCode: ", http.getResponseCode()+"");
+                if(http.getResponseCode() >=200 && http.getResponseCode() <= 300){
+                    rd = new BufferedReader(in);
+                } else {
+                    rd = new BufferedReader(in);
+                }
+
+                String line;
+                while ((line = rd.readLine()) != null){
+                    sb.append(line).append("\n");
+                }
+
+                JsonParser parser = new JsonParser();
+                JsonObject jsonObject;
+                JsonObject jsonObject2;
+                String x = "";
+                String y = "";
+
+                jsonObject = (JsonObject) parser.parse(sb.toString());
+                JsonArray jsonArray = (JsonArray) jsonObject.get("results");
+                Log.d("myLog3", jsonArray.toString());
+
+                for(int i=0;i<jsonArray.size();i++){
+                    jsonObject2 = (JsonObject)jsonArray.get(i);
+
+                    Log.d("myLog2", jsonObject2.toString());
+                    //jsonObject2 = jsonArray.json();
+                    if(null != jsonObject2.get("x")){
+                        x = (String) jsonObject2.get("x").toString();
+                    }
+                    if(null != jsonObject2.get("y")){
+                        x = (String) jsonObject2.get("y").toString();
+                    }
+                }
+                rd.close();
+                in.close();
+                http.disconnect();
+
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            } catch (ProtocolException e) {
+                e.printStackTrace();
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -189,6 +244,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mark.setTag("위도: " + latLng.latitude + "경도: " + latLng.longitude);
 
                 mark.setOnClickListener(listener);
+                MyAsyncTask myAsyncTask = new MyAsyncTask();
+                myAsyncTask.execute(latLng);
 
             }
         });
