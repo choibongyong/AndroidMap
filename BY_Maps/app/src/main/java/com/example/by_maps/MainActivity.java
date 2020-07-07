@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 
+import android.graphics.Color;
 import android.graphics.PointF;
 import android.location.Address;
 import android.location.Geocoder;
@@ -31,6 +32,7 @@ import com.naver.maps.map.overlay.InfoWindow;
 import com.naver.maps.map.overlay.LocationOverlay;
 import com.naver.maps.map.overlay.Marker;
 import com.naver.maps.map.overlay.Overlay;
+import com.naver.maps.map.overlay.PolygonOverlay;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -47,6 +49,9 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.SimpleTimeZone;
@@ -73,7 +78,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             fm.beginTransaction().add(R.id.map_fragment, mapFragment).commit();
         }
         mapFragment.getMapAsync((OnMapReadyCallback) this);
-        TextView mTextView = (TextView)findViewById(R.id.textView);
     }
 
     public class MyAsyncTask extends AsyncTask<LatLng,String, String>{
@@ -234,12 +238,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }; //마커 on/off
 
         naverMap.setOnMapClickListener(new NaverMap.OnMapClickListener() {
+            List<LatLng> coords = new ArrayList<>();
             @Override
             public void onMapClick(@NonNull PointF pointF, @NonNull LatLng latLng) {
-
                 Marker mark = new Marker();
                 mark.setPosition(latLng);
                 mark.setMap(naverMap);
+
+                PolygonOverlay polygon = new PolygonOverlay();
+                coords.add(new LatLng(latLng.latitude,latLng.longitude));
+
+                if(coords.size() > 2){
+                    polygon.setCoords(coords);
+                    polygon.setMap(naverMap);
+                    polygon.setOutlineWidth(5);
+                    polygon.setOutlineColor(Color.GREEN);
+                }
+                if(coords.size() > 4) {
+                    polygon.setMap(null);
+                    polygon.setCoords(coords);
+                    polygon.setMap(naverMap);
+                }
+
+                Log.d("coords size : ",Integer.toString(coords.size()));
+
 
                 mark.setTag("위도: " + latLng.latitude + "경도: " + latLng.longitude);
 
@@ -250,29 +272,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-
         CameraUpdate cameraUpdate = CameraUpdate.scrollTo(new LatLng(35.945379, 126.682170));
         naverMap.moveCamera(cameraUpdate);
-
-        Marker marker0 = new Marker();
-        marker0.setPosition(new LatLng(37.566672, 126.978412)); //서울시청
-        marker0.setMap(naverMap);
 
         Marker marker1 = new Marker();
         marker1.setPosition(new LatLng(35.945379, 126.682170)); //군산대학교 아카데미
         marker1.setMap(naverMap);
-
-        Marker marker2 = new Marker();
-        marker2.setPosition(new LatLng(36.282929, 126.917359)); //집
-        marker2.setMap(naverMap);
-
-        marker0.setTag("서울시청");
         marker1.setTag("군산대학교");
-        marker2.setTag("집");
-
-        marker0.setOnClickListener(listener);
         marker1.setOnClickListener(listener);
-        marker2.setOnClickListener(listener);
+
 
     }
 }
